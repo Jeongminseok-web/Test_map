@@ -28,7 +28,41 @@ const currentData = data.records.filter(
 );
 // console.log(currentData);
 
-// 네이버 맵 적용
+// 검색 버튼 기능
+const searchBtn = document.querySelector('.search button'); // 검색 버튼
+const searchInput = document.querySelector('.search input'); // 검색 입력 창
+const mapElmt = document.querySelector('#map'); // 네이버 맵 영역
+const loading = document.querySelector('.loading'); // 로딩 이미지
+
+// 검색 버튼 클릭시 실행 함수
+searchBtn.addEventListener('click', function () {
+  const searchValue = searchInput.value; // 입력값 저장
+
+  if (searchInput.value === '') {
+    alert('검색어를 입력해 주세요.');
+    searchInput.focus();
+    return;
+  } // 검색어 없을 경우
+
+  const searchResult = currentData.filter(
+    (item) =>
+      item.도서관명.includes(searchValue) || item.시군구명.includes(searchValue)
+  );
+
+  if (searchResult.lenght === 0) {
+    alert('검색 결과가 없습니다.');
+    searchInput.value = ''; // 검색어 지움
+    searchInput.focus(); // 커서 입력창에 포커스
+    return;
+  } else {
+    mapElmt.innerHTML = ''; // 기존앱 삭제
+
+    startLenderMap(searchResult[0].위도, searchResult[0].경도);
+    searchInput.value = ''; // 검색어 지움
+  }
+});
+
+// 네이버 맵 적용 : 현재 위치 검색
 navigator.geolocation.getCurrentPosition((position) => {
   // console.log(position);
   const lat = position.coords.latitude;
@@ -41,7 +75,7 @@ navigator.geolocation.getCurrentPosition((position) => {
 function startLenderMap(lat, lng) {
   var map = new naver.maps.Map('map', {
     center: new naver.maps.LatLng(lat, lng),
-    zoom: 12,
+    zoom: 13,
   });
 
   var marker = new naver.maps.Marker({
@@ -78,6 +112,10 @@ function startLenderMap(lat, lng) {
           <h4 style="padding:0.25rem 0.5rem; font-size:16px; font-weight:400; color:#555">${item.도서관명}</h4>
         `,
       });
+
+      setTimeout(() => {
+        loading.style.display = 'none';
+      }, 500);
 
       naver.maps.Event.addListener(marker, 'click', function () {
         if (infoWindow.getMap()) {
